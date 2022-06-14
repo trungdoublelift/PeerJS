@@ -1,10 +1,10 @@
-<video  id="user-Cam" width="500" height="500" autoplay playsinline>
+<div id="video-container">
+  <video id="user-Cam" width="500" height="500" autoplay playsinline>
+  </video>
+  <video id="user-Cam2" width="500" height="500" autoplay playsinline></video>
+</div>
 
-</video>
-
-<input type="text" id="PeerInput">
-<input type="text" id="Message">
-<button (click)="getOffer()">Accept Offer</button>
-<button (click)="getAnswer()">Send Answer</button>
-<button (click)="startCall()">StartCall</button>
-<video  id="user-Cam2" width="500" height="500" autoplay playsinline></video>
+<input type="text" id="callInput" placeholder="callInput" [(ngModel)]="inputCall">
+<button (click)="startCall()">Call</button>
+<input type="text" id="answerInput" placeholder="answerInput" [(ngModel)]="inputAnswer">
+<button (click)="answerCall()">Answer</button>

@@ -1,0 +1,14 @@
+{
+  "targets": {
+    "webrtc-9b2ee": {
+      "hosting": {
+        "Peer": [
+          "webrtc-9b2ee"
+        ]
+      }
+    }
+  },
+  "projects": {
+    "default": "webrtc-9b2ee"
+  }
+}
