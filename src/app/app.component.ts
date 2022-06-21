@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { doc, Firestore, collection, addDoc, setDoc, collectionData, docData, getDoc, collectionChanges, updateDoc } from '@angular/fire/firestore';
 
-import { Peer } from "peerjs";
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -31,14 +30,11 @@ export class AppComponent implements OnInit {
   }
   ngOnInit(): void {
     this.init();
-
   }
-  peer = new Peer(Math.floor(Math.random() * 100000).toString());
   async init() {
-
     let localvideo = <HTMLVideoElement>document.getElementById('user-Cam');
     let remoteVideo = <HTMLVideoElement>document.getElementById('user-Cam2');
-    this.localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+    this.localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
     this.remoteStream = new MediaStream();
     this.localStream.getTracks().forEach((track) => {
@@ -49,17 +45,19 @@ export class AppComponent implements OnInit {
         this.remoteStream.addTrack(track);
       })
     })
+
     localvideo.srcObject = this.localStream;
     remoteVideo.srcObject = this.remoteStream;
   }
   async startCall() {
-    console.log(this.inputCall)
+
     this.callRef = collection(this.fs, 'calls');
     this.offerDocRef = collection(doc(this.callRef, this.inputCall), 'offerCandidates');
     this.ansdocRef = collection(doc(this.callRef, this.inputCall), 'answerCandidates');
 
     const offerDescription = await this.pc.createOffer();
     this.pc.onicecandidate = (event) => {
+
       event.candidate && addDoc(this.offerDocRef, event.candidate.toJSON());
     }
     await this.pc.setLocalDescription(offerDescription);
@@ -67,9 +65,8 @@ export class AppComponent implements OnInit {
       sdp: offerDescription.sdp,
       type: offerDescription.type,
     }
-    await setDoc(doc(this.callRef, this.inputCall), {offer});
+    await setDoc(doc(this.callRef, this.inputCall), { offer });
     docData(doc(this.callRef, this.inputCall)).subscribe((data: any) => {
-      console.log(data);
       if (!this.pc.currentRemoteDescription && data?.answer) {
         const answerDescription = new RTCSessionDescription(data.answer);
         this.pc.setRemoteDescription(answerDescription)
@@ -83,7 +80,6 @@ export class AppComponent implements OnInit {
         }
       })
     })
-
   }
   async answerCall() {
     this.callRef = collection(this.fs, 'calls');
@@ -97,29 +93,38 @@ export class AppComponent implements OnInit {
     this.pc.onicecandidate = ((event) => {
       event.candidate && addDoc(ansdocRef, event.candidate.toJSON());
     })
-    const callData= (await getDoc(callDoc)).data();
+    const callData = (await getDoc(callDoc)).data();
 
-    const offerDescription=callData!['offer'];
+    const offerDescription = callData!['offer'];
     await this.pc.setRemoteDescription(new RTCSessionDescription(offerDescription))
 
-    const answerDescription=await this.pc.createAnswer();
-    console.log(answerDescription);
+    const answerDescription = await this.pc.createAnswer();
+
     await this.pc.setLocalDescription(answerDescription);
 
-    const answer={
-      sdp:answerDescription.sdp,
-      type:answerDescription.type
+    const answer = {
+      sdp: answerDescription.sdp,
+      type: answerDescription.type
     }
-    updateDoc(callDoc,{answer});
-
-    collectionChanges(this.offerDocRef).subscribe((data)=>{
-      data.forEach((doc)=>{
-        if(doc.type==='added'){
-          let data=doc.doc.data();
+    updateDoc(callDoc, { answer });
+    collectionChanges(this.offerDocRef).subscribe((data) => {
+      data.forEach((doc) => {
+        if (doc.type === 'added') {
+          let data = doc.doc.data();
           this.pc.addIceCandidate(new RTCIceCandidate(data));
         }
       })
     })
+  }
 
+  turnWebCam() {
+    this.localStream.getVideoTracks().forEach((track) => {
+      track.enabled = !track.enabled;
+    })
+  }
+  turnMic() {
+    this.localStream.getAudioTracks().forEach((track) => {
+      track.enabled = !track.enabled;
+    })
   }
 }
